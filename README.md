@@ -86,5 +86,3 @@ python3 python/demo.py --interactive
 Nghiem Pham -- CUDA kernels, benchmarking
 
 Tiffany Karki -- Python bindings, semantic search demo
-
-Built for CS 309 Parallel Programming at Knox College, Spring 2026.
