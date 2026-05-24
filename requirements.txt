@@ -1,0 +1,5 @@
+sentence-transformers
+faiss-gpu-cu12
+numpy
+datasets
+pybind11
