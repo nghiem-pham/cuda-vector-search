@@ -15,8 +15,13 @@ help:
 	@echo
 	@echo "CUDA Vector Search Engine"
 	@echo
-	@echo "make engine        Build CUDA search engine"
+	@echo "make engine        Build CUDA search engine"\
+	@echo "make bindings      Build Python bindings"\
+	@echo "make all		   	  Build both engine and bindings"\
 	@echo "make clean         Remove build artifacts"
+
+all: 
+	$(OBJS) bindings
 
 # Build main CUDA executable
 engine: src/main.cpp src/engine.cu
