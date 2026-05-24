@@ -22,6 +22,15 @@ help:
 engine: src/main.cpp src/engine.cu
 	$(CUDACC) $(CUDAFLAGS) $(INCLUDES) $^ -o $@
 
+bindings:
+	$(CUDACC) -O2 -shared \ 
+		--compiler-options -fPIC \ 
+		$(shell python3 -m pybind11 --includes) \ -I$(shell python3 -c "import sysconfig; print(sysconfig.get_path('include'))") \ 
+		$(INCLUDES) \ 
+		-o cuda_search$(shell python3-config --extension-suffix) \ 
+		python/bindings.cpp src/engine.cu \ 
+		$(CUDAFLAGS)
+
 # Remove build artifacts
 clean:
-	rm -rf $(OBJS)
+	rm -rf $(OBJS) cuda_search*.so
