@@ -25,8 +25,7 @@ help:
 	@echo "make all		   	  Build both engine and bindings"
 	@echo "make clean         Remove build artifacts"
 
-all: 
-	$(OBJS) bindings
+all: engine bindings
 
 # Build main CUDA executable
 engine: src/main.cpp src/engine.cu
