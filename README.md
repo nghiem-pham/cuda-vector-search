@@ -90,6 +90,6 @@ python3 python/bench.py
 
 ## Team
 
-Nghiem Pham -- CUDA kernels, benchmarking
+Nghiem Pham -- CUDA kernels (global, shared, coalesced), benchmarking, Makefile
 
-Tiffany Karki -- Python bindings, semantic search demo
+Tiffany Karki -- pybind11 Python bindings, MS MARCO embedding pipeline, semantic search demo, FAISS comparison
