@@ -8,9 +8,10 @@ namespace py = pybind11;
 // Wraps Engine for Python
 // Usage:
 //   import cuda_search
-//   engine = cuda_search.Engine(embeddings)             # embeddings: np.ndarray [N, D] float32
-//   indices, scores = engine.search(query, k)           # global kernel (default)
-//   indices, scores = engine.search(query, k, True)     # shared memory kernel
+//   engine = cuda_search.Engine(embeddings)        # embeddings: np.ndarray [N, D] float32
+//   indices, scores = engine.search(query, k)      # global kernel (default, kernel=0)
+//   indices, scores = engine.search(query, k, 1)   # shared memory kernel
+//   indices, scores = engine.search(query, k, 2)   # shared + coalesced kernel
 
 class PyEngine {
 public:
@@ -27,7 +28,7 @@ public:
     }
 
     std::pair<std::vector<int>, std::vector<float>>
-    search(py::array_t<float> query, int k, bool use_tiled = false) {
+    search(py::array_t<float> query, int k, int kernel = 0) {
         auto buf = query.request();
         if (buf.ndim != 1)
             throw std::runtime_error("query must be 1D array [D]");
@@ -35,7 +36,7 @@ public:
         std::vector<int>   indices(k);
         std::vector<float> scores(k);
         engine_->search(
-            static_cast<float*>(buf.ptr), k, use_tiled,
+            static_cast<float*>(buf.ptr), k, kernel,
             indices.data(), scores.data()
         );
         return { indices, scores };
@@ -57,11 +58,12 @@ PYBIND11_MODULE(cuda_search, m) {
              "Load embedding database onto GPU.\n"
              "db: numpy float32 array of shape [N, D]")
         .def("search", &PyEngine::search,
-             py::arg("query"), py::arg("k") = 10, py::arg("use_tiled") = false,
-             "Find top-K nearest neighbors.\n"
-             "use_tiled=False: global kernel (default)\n"
-             "use_tiled=True:  shared memory kernel\n"
-             "Returns (indices, scores) tuple.")
+            py::arg("query"), py::arg("k") = 10, py::arg("kernel") = 0,
+            "Find top-K nearest neighbors.\n"
+            "kernel = 0: global kernel (default)\n"
+            "kernel = 1: shared memory kernel\n"
+            "kernel = 2: shared + coalesced kernel\n"
+            "Returns (indices, scores) tuple.")
         .def_property_readonly("N", &PyEngine::N)
         .def_property_readonly("D", &PyEngine::D);
 }

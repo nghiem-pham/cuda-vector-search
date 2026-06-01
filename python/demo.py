@@ -25,7 +25,7 @@ def search(engine, model, chunks, query_text: str, k: int = 5):
     q_vec = model.encode([query_text], normalize_embeddings=True)[0].astype("float32")
 
     # Search
-    indices, scores = engine.search(q_vec, k)
+    indices, scores = engine.search(q_vec, k, 2)
 
     return [
         {"rank": i + 1, "score": float(scores[i]), "text": chunks[indices[i]]}
