@@ -54,10 +54,10 @@ int main(int argc, char* argv[]) {
     std::vector<float> cuda_scores(K);
 
     // Warmup
-    engine.search(query.data(), K, false, cuda_indices.data(), cuda_scores.data());
+    engine.search(query.data(), K, 0, cuda_indices.data(), cuda_scores.data());
 
     auto t2 = std::chrono::high_resolution_clock::now();
-    engine.search(query.data(), K, false, cuda_indices.data(), cuda_scores.data());
+    engine.search(query.data(), K, 0, cuda_indices.data(), cuda_scores.data());
     auto t3 = std::chrono::high_resolution_clock::now();
     double global_ms = std::chrono::duration<double, std::milli>(t3 - t2).count();
     std::cout << "CUDA global:    " << global_ms << "ms"
@@ -65,14 +65,27 @@ int main(int argc, char* argv[]) {
 
     // ── CUDA shared kernel ────────────────────────
     // Warmup
-    engine.search(query.data(), K, true, cuda_indices.data(), cuda_scores.data());
+    engine.search(query.data(), K, 1, cuda_indices.data(), cuda_scores.data());
 
     auto t4 = std::chrono::high_resolution_clock::now();
-    engine.search(query.data(), K, true, cuda_indices.data(), cuda_scores.data());
+    engine.search(query.data(), K, 1, cuda_indices.data(), cuda_scores.data());
     auto t5 = std::chrono::high_resolution_clock::now();
     double shared_ms = std::chrono::duration<double, std::milli>(t5 - t4).count();
     std::cout << "CUDA shared:    " << shared_ms << "ms"
           << "  (" << cpu_ms / shared_ms << "x)\n";
+
+
+    // ── CUDA shared coalesced kernel ────────────────────────
+    // Warmup
+
+    engine.search(query.data(), K, 2, cuda_indices.data(), cuda_scores.data());
+
+    auto t6 = std::chrono::high_resolution_clock::now();
+    engine.search(query.data(), K, 2, cuda_indices.data(), cuda_scores.data());
+    auto t7 = std::chrono::high_resolution_clock::now();
+    double coalesced_ms = std::chrono::duration<double, std::milli>(t7 - t6).count();
+    std::cout << "CUDA shared+coalesced:   " << coalesced_ms << "ms"
+          << "  (" << cpu_ms / coalesced_ms << "x)\n";
 
     // ── Correctness check ─────────────────────────
     int matches = 0;
@@ -87,6 +100,7 @@ int main(int argc, char* argv[]) {
               << " (" << (100.0 * matches / K) << "%)\n";
     std::cout << "Global speedup: " << cpu_ms / global_ms << "x\n";
     std::cout << "Shared speedup: " << cpu_ms / shared_ms << "x\n";
+    std::cout << "Coalesced speedup:       " << cpu_ms / coalesced_ms << "x\n";
 
     return 0;
 }

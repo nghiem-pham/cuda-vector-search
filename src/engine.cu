@@ -1,12 +1,14 @@
 #include "engine.h"
 #include "kernels/cosine_global.cu"
 #include "kernels/cosine_shared.cu"
+#include "kernels/cosine_shared_coalesced.cu"
 #include <cuda_runtime.h>
 #include <thrust/sort.h>
 #include <thrust/device_vector.h>
 #include <thrust/sequence.h>
 #include <stdexcept>
 #include <string>
+#include <vector>
 
 // ─────────────────────────────────────────────
 // Helpers
@@ -29,15 +31,28 @@
 Engine::Engine(const float* db, int N, int D)
     : n_(N), d_(D) {
     size_t bytes = (size_t)N * D * sizeof(float);
+
+    // Load original layout
     CUDA_CHECK(cudaMalloc(&d_db_, bytes));
     CUDA_CHECK(cudaMemcpy(d_db_, db, bytes, cudaMemcpyHostToDevice));
+
+    // Transpose on CPU then copy
+    std::vector<float> db_T(N*D);
+    for (int d = 0; d < D; d++) {
+        for (int n = 0; n < N; n++) {
+            db_T[d * N + n] = db[n * D + d];
+        }
+    }
+    CUDA_CHECK(cudaMalloc(&d_db_T_, bytes));
+    CUDA_CHECK(cudaMemcpy(d_db_T_, db_T.data(), bytes, cudaMemcpyHostToDevice));
 }
 
 Engine::~Engine() {
     cudaFree(d_db_);
+    cudaFree(d_db_T_);
 }
 
-void Engine::search(const float* query, int k, bool use_tiled,
+void Engine::search(const float* query, int k, int kernel,
                     int* out_indices, float* out_scores) {
     // Copy query to device
     float* d_query;
@@ -50,8 +65,12 @@ void Engine::search(const float* query, int k, bool use_tiled,
     CUDA_CHECK(cudaMalloc(&d_scores, n_ * sizeof(float)));
 
     // Launch kernel -- switch use_tiled to compare both versions
-
-    if (use_tiled) {
+    // use_tiled: 0 = global, 1 = shared, 2 = coalesced
+    if (kernel == 2) {
+        int threads = TILE_SIZE_COALESCED;
+        int blocks = (n_ + threads - 1) / threads;
+        cosine_shared_coalesced<<<blocks, threads>>>(d_db_T_, d_query, d_scores, n_, d_);
+    } else if (kernel == 1) {
         // Tiled kernel: loads query tiles into shared memory
         // Reduces global memory traffic at the cost of sync overhead
         int threads = TILE_SIZE;

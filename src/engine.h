@@ -15,14 +15,15 @@ public:
     // k:           number of results to return
     // out_indices: int array of shape [k], caller-allocated
     // out_scores:  float array of shape [k], caller-allocated
-    void search(const float* query, int k, bool use_tiled,
+    void search(const float* query, int k, int kernel,
                 int* out_indices, float* out_scores);
 
     int N() const { return n_; }
     int D() const { return d_; }
 
 private:
-    float* d_db_;   // device pointer to database
+    float* d_db_;   // device pointer to database, original layout [N x D]
+    float* d_db_T_; // transposed layout [D x N]
     int    n_;
     int    d_;
 };
