@@ -14,15 +14,16 @@ Computes cosine similarity between a query vector and a large embedding database
 
 Tested on RTX 3060, D=384, K=10.
 
-| Method         | N=10k        | N=100k        | N=1M          |
-|----------------|--------------|---------------|---------------|
-| CPU sequential | 2.46ms       | 23.65ms       | 235.89ms      |
-| CUDA global    | 0.39ms (6x)  | 2.27ms (10x)  | 24.71ms (10x) |
-| CUDA shared    | 0.36ms (7x)  | 1.30ms (18x)  | 11.74ms (20x) |
+| Method                | N=10k         | N=100k        | N=1M          |
+|-----------------------|---------------|---------------|---------------|
+| CPU sequential        | 4.44ms        | 39.62ms       | 410.71ms      |
+| CUDA global           | 0.43ms (10x)  | 2.51ms (16x)  | 25.60ms (16x) |
+| CUDA shared           | 0.41ms (11x)  | 1.36ms (29x)  | 12.30ms (33x) |
+| CUDA shared+coalesced | 0.42ms (10x)  | 1.16ms (34x)  | 9.65ms (43x) |
 
 Recall@10: 100% across all dataset sizes.
 
-Speedup increases with N -- shared memory optimization becomes more effective at larger scales as memory bandwidth becomes the dominant bottleneck.
+Speedup increases with N -- coalesced memory access becomes more effective at larger scale as memory bandwidth becomes the dominant bottleneck.
 
 ## Structure
 
