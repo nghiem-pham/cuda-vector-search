@@ -33,8 +33,8 @@ engine: src/main.cpp src/engine.cu
 	$(CUDACC) $(CUDAFLAGS) $(INCLUDES) $^ -o $@
 
 bindings:
-	$(CUDACC) -O2 -shared --compiler-options -fPIC $(PYBIND_INC) $(PYTHON_INC) $(INCLUDES) -o cuda_search$(PYTHON_EXT) python/bindings.cpp src/engine.cu $(CUDAFLAGS)
+	$(CUDACC) -O2 -shared --compiler-options -fPIC $(PYBIND_INC) $(PYTHON_INC) $(INCLUDES) -o python/cuda_search$(PYTHON_EXT) python/bindings.cpp src/engine.cu $(CUDAFLAGS)
 
 # Remove build artifacts
 clean:
-	rm -rf $(OBJS) cuda_search*.so
+	rm -rf $(OBJS) python/cuda_search*.so
