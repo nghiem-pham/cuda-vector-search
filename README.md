@@ -8,6 +8,7 @@ Computes cosine similarity between a query vector and a large embedding database
 
 - `cosine_global` -- each thread reads query from global memory
 - `cosine_shared` -- query tiles cached in shared memory to reduce global memory traffic
+- `cosine_shared_coalesced` -- shared memory + column-major layout for coalesced db access
 
 ## Benchmark Results
 
@@ -39,6 +40,7 @@ cuda-vector-search/
 │   ├── bindings.cpp            # pybind11 Python bindings
 │   ├── demo.py                 # semantic search CLI demo
 │   └── embed_msmarco.py        # MS MARCO embedding pipeline
+│   └── bench.py        # Our CUDA vs FAISS benchmark
 ├── Makefile
 └── requirements.txt
 ```
@@ -72,6 +74,11 @@ python3 python/embed_msmarco.py --limit 50000 --output data/
 ```bash
 python3 python/demo.py --query "how does computer memory work" --k 5
 python3 python/demo.py --interactive
+```
+
+**Benchmark CUDA vs FAISS:**
+```bash
+python3 python/bench.py
 ```
 
 ## Stack
